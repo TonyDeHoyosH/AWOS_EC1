@@ -1,61 +1,49 @@
-DROP TABLE IF EXISTS ventas CASCADE;
-DROP TABLE IF EXISTS productos CASCADE;
-DROP TABLE IF EXISTS categorias CASCADE;
-DROP TABLE IF EXISTS empleados CASCADE;
-DROP TABLE IF EXISTS turnos CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
 
-CREATE TABLE categorias (
+CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE,
-    descripcion TEXT,
-    activo BOOLEAN DEFAULT true,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(100) NOT NULL UNIQUE
 );
 
-CREATE TABLE productos (
+CREATE TABLE products (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(200) NOT NULL,
-    categoria_id INTEGER REFERENCES categorias(id),
-    precio DECIMAL(10,2) NOT NULL CHECK (precio >= 0),
-    costo DECIMAL(10,2) NOT NULL CHECK (costo >= 0),
+    name VARCHAR(200) NOT NULL,
+    category_id INTEGER REFERENCES categories(id),
+    price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
     stock INTEGER DEFAULT 0 CHECK (stock >= 0),
-    stock_minimo INTEGER DEFAULT 10,
-    activo BOOLEAN DEFAULT true,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    active BOOLEAN DEFAULT true
 );
 
-CREATE TABLE turnos (
+CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL,
-    activo BOOLEAN DEFAULT true
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(200) UNIQUE NOT NULL
 );
 
-CREATE TABLE empleados (
+CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
-    apellido VARCHAR(150) NOT NULL,
-    email VARCHAR(200) UNIQUE,
-    telefono VARCHAR(20),
-    turno_id INTEGER REFERENCES turnos(id),
-    fecha_contratacion DATE DEFAULT CURRENT_DATE,
-    salario DECIMAL(10,2),
-    activo BOOLEAN DEFAULT true
+    customer_id INTEGER REFERENCES customers(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'completed',
+    channel VARCHAR(50) DEFAULT 'in_store'
 );
 
-CREATE TABLE ventas (
+CREATE TABLE order_items (
     id SERIAL PRIMARY KEY,
-    producto_id INTEGER NOT NULL REFERENCES productos(id),
-    empleado_id INTEGER REFERENCES empleados(id),
-    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
-    precio_unitario DECIMAL(10,2) NOT NULL,
-    subtotal DECIMAL(10,2) NOT NULL,
-    descuento DECIMAL(10,2) DEFAULT 0,
-    total DECIMAL(10,2) NOT NULL,
-    metodo_pago VARCHAR(50) DEFAULT 'efectivo',
-    fecha_venta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    turno VARCHAR(20),
-    notas TEXT
+    order_id INTEGER REFERENCES orders(id),
+    product_id INTEGER REFERENCES products(id),
+    qty INTEGER NOT NULL CHECK (qty > 0),
+    unit_price DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    method VARCHAR(50) NOT NULL,
+    paid_amount DECIMAL(10,2) NOT NULL
 );
